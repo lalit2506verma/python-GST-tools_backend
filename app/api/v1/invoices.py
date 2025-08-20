@@ -8,7 +8,7 @@ router = APIRouter(tags=["Invoices"])
 
 @router.post("/meesho-tax_invoice/")
 async def m_tax_invoice(tax_invoice: UploadFile = File(...)):
-    df = read_file(tax_invoice)
+    df = read_file(tax_invoice, 0)
     required = ["Type", "Invoice No."]
     if not all(c in df.columns for c in required):
         raise HTTPException(status_code=422, detail=f"Missing required columns: {required}")

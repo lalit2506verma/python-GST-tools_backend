@@ -5,12 +5,12 @@ from app.core.settings import settings
 def ensure_dirs() -> None:
     os.makedirs(settings.SAVE_DIR, exist_ok=True)
 
-def read_file(upload: UploadFile) -> pd.DataFrame:
+def read_file(upload: UploadFile, sheet_index: int) -> pd.DataFrame:
     name = (upload.filename or "").lower()
     if name.endswith(".csv"):
         return pd.read_csv(upload.file)
     elif name.endswith((".xls", ".xlsx")):
-        return pd.read_excel(upload.file)
+        return pd.read_excel(upload.file, sheet_name=sheet_index)
     raise ValueError(f"Unsupported file type: {name}")
 
 def save_temp_csv(df: pd.DataFrame) -> str:

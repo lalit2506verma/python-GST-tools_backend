@@ -1,9 +1,11 @@
 from typing import Dict
 from app.providers.base import SalesProvider
+from app.providers.flipkart import FlipkartProvider
 from app.providers.meesho import MeeshoProvider
 
 _registry: Dict[str, SalesProvider] = {
     "meesho": MeeshoProvider(),
+    "flipkart": FlipkartProvider(),
 }
 
 def get_provider(name: str) -> SalesProvider:

@@ -1,6 +1,9 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, BackgroundTasks, Query
 from fastapi.responses import FileResponse
 import os, pandas as pd
+
+from pygments.lexer import combined
+
 from app.core.settings import settings
 from app.services.fileio import read_file, save_temp_csv
 from app.services.pivot_csv import make_pivot, final_csv_file
@@ -18,8 +21,8 @@ async def process_file(
 ):
     try:
         prov = get_provider(provider)
-        sales_df = prov.normalize_sales(read_file(sales_file))
-        returns_df = prov.normalize_returns(read_file(return_sales_file))
+        sales_df = prov.normalize_sales(read_file(sales_file, 0))
+        returns_df = prov.normalize_returns(read_file(return_sales_file, 0))
 
         combined = pd.concat([sales_df, returns_df], ignore_index=True)
         combined["total_taxable_sale_value"] = pd.to_numeric(
@@ -40,5 +43,45 @@ async def process_file(
 
         background_tasks.add_task(os.remove, csv_path)
         return FileResponse(csv_path, filename="processed.csv", media_type="text/csv")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Processing error") from e
+
+@router.post("/flipkart/process-file/")
+async def flipkart_process_file(
+    sales_file: UploadFile = File(...),
+    provider: str = Query("flipkart"),
+    background_tasks: BackgroundTasks = BackgroundTasks()
+):
+    try:
+        prov = get_provider(provider)
+        print("Provider received")
+        print(prov.name)
+
+        sales_df = prov.normalize_sales(read_file(sales_file, 1))
+        cashback_df = prov.normalize_returns(read_file(sales_file, 2))
+
+        combined_df = pd.concat([sales_df, cashback_df])
+        combined_df["total_taxable_sale_value"] = pd.to_numeric(
+            combined_df["total_taxable_sale_value"], errors="coerce"
+        ).round(4)
+
+        pivot = make_pivot(combined_df)
+        # save pivot workbook too
+        pivot_path = os.path.join(settings.SAVE_DIR, "flipkart_pivot_output.xlsx")
+        pivot.to_excel(pivot_path, index=True)
+
+        csv_df = final_csv_file(pivot)
+        csv_path = save_temp_csv(csv_df)
+
+        # JSON for GST portal
+        json_path = os.path.join(settings.SAVE_DIR, "flipkart_gst_output.json")
+        csv_to_gst_json(csv_df, json_path)
+
+        # ADDITIONAL STEP TO CREATE DOC.CSV FILE (INVOICE & CREDIT NOTE)
+
+
+        background_tasks.add_task(os.remove, csv_path)
+        return FileResponse(csv_path, filename="flipkart_processed.csv", media_type="text/csv")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail="Processing error") from e
