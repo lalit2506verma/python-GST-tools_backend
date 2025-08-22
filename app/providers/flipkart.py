@@ -25,9 +25,9 @@ class FlipkartProvider(SalesProvider):
     @override
     def normalize_sales(self, sales_df: pd.DataFrame) -> pd.DataFrame:
         """
-        Normalizes Flipkart file into standard schema.
-        File already contains both sales and returns,
-        returns come as negative taxable values.
+            Normalizes Flipkart file into standard schema.
+            File already contains both sales and returns,
+            returns come as negative taxable values.
         """
 
         required_cols = {
@@ -36,6 +36,8 @@ class FlipkartProvider(SalesProvider):
             "IGST Rate",
             "CGST Rate",
             "SGST Rate (or UTGST as applicable)",
+            "Event Sub Type",
+            "Buyer Invoice ID"
         }
         missing = required_cols - set(sales_df.columns)
         if missing:
@@ -71,6 +73,8 @@ class FlipkartProvider(SalesProvider):
             "IGST Rate",
             "CGST Rate",
             "SGST Rate (or UTGST as applicable)",
+            "Document Sub Type",
+            "Credit Note ID/ Debit Note ID"
         }
 
         missing = required_cols - set(cashback_df.columns)
