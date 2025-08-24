@@ -3,6 +3,13 @@ from typing_extensions import override
 
 from app.providers.base import SalesProvider
 
+normalize_column = [
+    "end_customer_state_new",
+    "gst_rate",
+    "total_taxable_sale_value",
+    "invoice_number",
+    "event_type"
+]
 
 class FlipkartProvider(SalesProvider):
     name = "flipkart"
@@ -55,14 +62,13 @@ class FlipkartProvider(SalesProvider):
             columns={
                 "Taxable Value (Final Invoice Amount -Taxes)": "total_taxable_sale_value",
                 "Customer's Delivery State": "end_customer_state_new",
+                "Event Sub Type": "event_type",
+                "Buyer Invoice ID": "invoice_number"
             },
             inplace=True,
         )
 
-        print("Column name changed")
-        print(df)
-
-        return df[["end_customer_state_new", "total_taxable_sale_value", "gst_rate"]]
+        return df[normalize_column]
 
     @override
     def normalize_returns(self, cashback_df: pd.DataFrame) -> pd.DataFrame:
@@ -93,11 +99,10 @@ class FlipkartProvider(SalesProvider):
             columns={
                 "Taxable Value": "total_taxable_sale_value",
                 "Customer's Delivery State": "end_customer_state_new",
+                "Credit Note ID/ Debit Note ID": "invoice_number",
+                "Document Sub Type": "event_type"
             },
             inplace=True,
         )
 
-        print("Column name changed")
-        print(df)
-
-        return df[["end_customer_state_new", "total_taxable_sale_value", "gst_rate"]]
+        return df[normalize_column]

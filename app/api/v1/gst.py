@@ -60,7 +60,8 @@ async def flipkart_process_file(
         sales_df = prov.normalize_sales(read_file(sales_file, 1))
         cashback_df = prov.normalize_returns(read_file(sales_file, 2))
 
-        combined_df = pd.concat([sales_df, cashback_df])
+        combined_df = pd.concat([sales_df, cashback_df], ignore_index=True)
+
         combined_df["total_taxable_sale_value"] = pd.to_numeric(
             combined_df["total_taxable_sale_value"], errors="coerce"
         ).round(4)
