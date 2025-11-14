@@ -4,6 +4,7 @@ import os, pandas as pd
 
 from pygments.lexer import combined
 
+from app.api.v1.invoices import flipkart_tax_invoice
 from app.core.settings import settings
 from app.services.fileio import read_file, save_temp_csv
 from app.services.pivot_csv import make_pivot, final_csv_file
@@ -74,12 +75,12 @@ async def flipkart_process_file(
         csv_df = final_csv_file(pivot)
         csv_path = save_temp_csv(csv_df)
 
+        print("Invoice stats df")
+        return flipkart_tax_invoice(sales_df, cashback_df)
+
         # JSON for GST portal
         json_path = os.path.join(settings.SAVE_DIR, "flipkart_gst_output.json")
         csv_to_gst_json(csv_df, json_path)
-
-        # ADDITIONAL STEP TO CREATE DOC.CSV FILE (INVOICE & CREDIT NOTE)
-
 
         background_tasks.add_task(os.remove, csv_path)
         return FileResponse(csv_path, filename="flipkart_processed.csv", media_type="text/csv")
